@@ -1,15 +1,5 @@
-// Добавьте этот код в начало файла
-if (typeof BX24 !== 'undefined') {
-    BX24.init(function() {
-        loadAllProducts(); // Запускаем загрузку после инициализации
-    });
-} else {
-    console.error('BX24 object not found. Running in standalone mode.');
-    // Альтернативный вариант загрузки
-}
-
-// Конфигурация
-const BX_WEBHOOK = 'https://b24-xwozh7.bitrix24.ru/rest/8/v4aimvko2vjd1yu1/';
+// Конфигурация (для GitHub Pages можно оставить пустым или использовать ваш webhook при необходимости)
+const BX_WEBHOOK = ''; // Не используется в автономном режиме
 const CATALOG_ID = 24;
 const SMART_PROCESS_ID = 1040;
 
@@ -37,129 +27,40 @@ const optionalResultsContainer = document.getElementById('optionalProductResults
 let allProducts = [];
 let selectedProduct = null;
 let selectedOptionalProduct = null;
-let currentPage = 0;
-let isLoading = false;
 let dayCounter = 0;
 const PRODUCTS_PER_PAGE = 50;
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    loadHotelData();
-    loadAllProducts();
-
-    // Основные события
-    calculateBtn.addEventListener('click', calculateTotal);
-    productSearchInput.addEventListener('input', renderProductList);
-    productSearchInput.addEventListener('focus', () => {
-        if (allProducts.length > 0) productResultsContainer.style.display = 'block';
-    });
-    document.addEventListener('click', (e) => {
-        if (!productResultsContainer.contains(e.target) && e.target !== productSearchInput) {
-            productResultsContainer.style.display = 'none';
-        }
-    });
-
-    addProductForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await createProduct();
-    });
-
-    // DAYS
-    if (addDayBtn) {
-        addDayBtn.addEventListener('click', () => {
-            createDayCard(dayCounter);
-            dayCounter++;
-        });
-    }
-
-    // OPTIONAL
-    if (optionalSearchInput) {
-        optionalSearchInput.addEventListener('input', () => renderOptionalProductList(optionalSearchInput, optionalResultsContainer));
-        optionalSearchInput.addEventListener('focus', () => {
-            if (allProducts.length > 0) optionalResultsContainer.style.display = 'block';
-        });
-    }
-});
-
 // Загрузка данных отеля
 async function loadHotelData() {
-    try {
-        const response = await fetch(`${BX_WEBHOOK}crm.item.list.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                entityTypeId: SMART_PROCESS_ID,
-                select: ["id", "ufCrm8_1745915405", "ufCrm8_1745407351156"],
-                filter: { "ufCrm8_1746009403": 1 },
-                start: -1
-            })
-        });
-        const data = await response.json();
-        if (data.error) throw new Error(data.error_description);
-        const hotel = data.result?.items[0];
-        if (!hotel) throw new Error('Отель не найден');
-        hotelNameEl.textContent = hotel.ufCrm8_1745915405 || 'Название не указано';
-        hotelDescEl.textContent = hotel.ufCrm8_1745407351156 || 'Описание отсутствует';
-    } catch (error) {
-        showNotification(`Ошибка загрузки отеля: ${error.message}`, true);
-        console.error(error);
-    }
+    hotelNameEl.textContent = 'Отель Demo';
+    hotelDescEl.textContent = 'Демонстрационное описание отеля.';
 }
 
-// Функция загрузки ВСЕХ товаров из Bitrix24
+// Функция загрузки ВСЕХ товаров из Bitrix24 (закомментировано для автономного режима)
 async function loadAllProducts() {
     try {
-        if (typeof BX24 !== 'undefined') {
-            // Используем встроенные методы Битрикс24
+        // Используйте это, если хотите работать через Bitrix24:
+        /* if (typeof BX24 !== 'undefined') {
             const result = await new Promise((resolve) => {
-                BX24.callMethod('crm.product.list', {
-                    select: ["ID", "NAME", "PRICE", "CURRENCY_ID"],
-                    start: -1
-                }, resolve);
+                BX24.callMethod('crm.product.list', { select: ["ID", "NAME", "PRICE", "CURRENCY_ID"], start: -1 }, resolve);
             });
-            
             allProducts = result.data() || [];
-        } else {
-            // Альтернативный вариант для локального тестирования
-            await loadProductsAlternative();
-        }
-        
-        renderProductList();
-        showNotification(`Загружено ${allProducts.length} товаров`);
+        } else { */
+
+            // Альтернативный вариант — демо-товары
+            allProducts = [
+                { ID: "1", NAME: "Стандартный номер", PRICE: "5000", CURRENCY_ID: "RUB" },
+                { ID: "2", NAME: "Люкс", PRICE: "10000", CURRENCY_ID: "RUB" },
+                { ID: "3", NAME: "Апартаменты", PRICE: "15000", CURRENCY_ID: "RUB" }
+            ];
+            renderProductList();
+            showNotification(`Загружено ${allProducts.length} товаров (демо-режим)`);
+        // }
     } catch (error) {
         console.error('Ошибка загрузки товаров:', error);
         showNotification('Не удалось загрузить товары', true);
     }
 }
-
-// Альтернативный метод загрузки
-async function loadProductsAlternative() {
-    const url = `${BX_WEBHOOK}crm.product.list?select[0]=ID&select[1]=NAME&select[2]=PRICE&select[3]=CURRENCY_ID`;
-    
-    // Открываем в новом окне для ручного копирования данных
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <h1>Ручная загрузка данных</h1>
-        <p>Откройте эту ссылку в браузере:</p>
-        <a href="${url}" target="_blank">${url}</a>
-        <p>Скопируйте JSON и вставьте ниже:</p>
-        <textarea id="jsonData" style="width:100%; height:200px"></textarea>
-        <button onclick="window.opener.processProductData(document.getElementById('jsonData').value); window.close()">Отправить</button>
-    `);
-}
-
-// Функция для обработки данных из ручного ввода
-function processProductData(jsonString) {
-    try {
-        const data = JSON.parse(jsonString);
-        allProducts = data.result || [];
-        renderProductList();
-        showNotification(`Загружено ${allProducts.length} товаров (ручной ввод)`);
-    } catch (error) {
-        showNotification('Ошибка обработки данных', true);
-    }
-}
-
 // Отрисовка товаров
 function renderProductList() {
     const searchQuery = productSearchInput.value.toLowerCase().trim();
@@ -193,39 +94,6 @@ function renderProductList() {
     }
 }
 
-// Создание нового товара
-async function createProduct() {
-    const name = document.getElementById('newProductName').value.trim();
-    const price = parseFloat(document.getElementById('newProductPrice').value);
-    const currency = document.getElementById('newProductCurrency').value;
-    if (!name || isNaN(price)) {
-        showNotification('Заполните все поля корректно', true);
-        return;
-    }
-    try {
-        const response = await fetch(`${BX_WEBHOOK}crm.product.add.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fields: {
-                    "CATALOG_ID": CATALOG_ID,
-                    "NAME": name,
-                    "PRICE": price,
-                    "CURRENCY_ID": currency
-                }
-            })
-        });
-        const data = await response.json();
-        if (data.error) throw new Error(data.error_description);
-        showNotification('Номер успешно создан!');
-        document.getElementById('addProductForm').reset();
-        loadAllProducts(); // Перезагружаем список товаров
-    } catch (error) {
-        showNotification(`Ошибка создания: ${error.message}`, true);
-        console.error(error);
-    }
-}
-
 // Расчёт стоимости основного блока
 function calculateTotal() {
     const nights = parseInt(document.getElementById('nights').value) || 0;
@@ -234,14 +102,11 @@ function calculateTotal() {
         showNotification('Выберите номер', true);
         return;
     }
-
     const price = parseFloat(selectedProduct.PRICE) || 0;
     const currency = selectedProduct.CURRENCY_ID || 'RUB';
     const total = price * rooms * nights;
-
     totalAmountEl.textContent = total.toFixed(2);
     currencyEl.textContent = currency;
-
     updateFinalTotal(); // <-- Здесь вызов
 }
 
@@ -249,9 +114,7 @@ function calculateTotal() {
 function createDayCard(index) {
     const card = document.createElement('div');
     card.className = 'day-card';
-
     const dayNumber = index + 1;
-
     card.innerHTML = `
         <div class="day-header">DAY ${dayNumber}</div>
         <div class="form-group">
@@ -263,22 +126,18 @@ function createDayCard(index) {
         </div>
         <button type="button" class="remove-day-btn">Удалить</button>
     `;
-
     // Поиск
     const searchInput = card.querySelector('.day-product-search');
     const resultsContainer = card.querySelector('.day-product-results');
-
     searchInput.addEventListener('input', () => renderDayProductList(searchInput, resultsContainer));
     searchInput.addEventListener('focus', () => {
         if (allProducts.length > 0) resultsContainer.style.display = 'block';
     });
-
     // Удаление
     card.querySelector('.remove-day-btn').addEventListener('click', () => {
         daysContainer.removeChild(card);
         updateTotalDaysSum();
     });
-
     daysContainer.appendChild(card);
 }
 
@@ -315,14 +174,11 @@ function renderDayProductList(inputEl, resultsContainer) {
     }
 }
 
-
 function updateFinalTotal() {
     let total = 0;
-
     // Основная стоимость (ACCOMMODATION)
     const accommodationTotal = parseFloat(totalAmountEl.textContent) || 0;
     total += accommodationTotal;
-
     // DAYS
     const dayCards = document.querySelectorAll('.day-card');
     dayCards.forEach(card => {
@@ -334,15 +190,14 @@ function updateFinalTotal() {
             }
         }
     });
-
     // OPTIONAL
     if (selectedOptionalProduct) {
         total += parseFloat(selectedOptionalProduct.PRICE);
     }
-
     // Обновляем итог
     document.getElementById('finalTotalAmount').textContent = total.toFixed(2);
 }
+
 // Рендеринг списка товаров для OPTIONAL
 function renderOptionalProductList(inputEl, resultsContainer) {
     const searchQuery = inputEl.value.toLowerCase().trim();
@@ -390,13 +245,10 @@ function updateTotalDaysSum() {
             }
         }
     });
-
     if (selectedOptionalProduct) {
         total += parseFloat(selectedOptionalProduct.PRICE);
     }
-
     totalDaysAmountEl.textContent = total.toFixed(2);
-
     // Объединённая сумма
     const baseTotal = parseFloat(totalAmountEl.textContent || 0);
     const overallTotal = baseTotal + total;
@@ -412,3 +264,37 @@ function showNotification(message, isError = false) {
         notificationEl.classList.remove('show');
     }, 5000);
 }
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    loadHotelData();
+    loadAllProducts();
+
+    // Основные события
+    calculateBtn.addEventListener('click', calculateTotal);
+    productSearchInput.addEventListener('input', renderProductList);
+    productSearchInput.addEventListener('focus', () => {
+        if (allProducts.length > 0) productResultsContainer.style.display = 'block';
+    });
+    document.addEventListener('click', (e) => {
+        if (!productResultsContainer.contains(e.target) && e.target !== productSearchInput) {
+            productResultsContainer.style.display = 'none';
+        }
+    });
+
+    // DAYS
+    if (addDayBtn) {
+        addDayBtn.addEventListener('click', () => {
+            createDayCard(dayCounter);
+            dayCounter++;
+        });
+    }
+
+    // OPTIONAL
+    if (optionalSearchInput) {
+        optionalSearchInput.addEventListener('input', () => renderOptionalProductList(optionalSearchInput, optionalResultsContainer));
+        optionalSearchInput.addEventListener('focus', () => {
+            if (allProducts.length > 0) optionalResultsContainer.style.display = 'block';
+        });
+    }
+});
