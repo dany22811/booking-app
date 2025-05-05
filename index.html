@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Бронирование отеля</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Система бронирования</h1>
+            <div class="hotel-info">
+                <h2 id="hotelName">Загрузка данных отеля...</h2>
+                <p id="hotelDescription"></p>
+            </div>
+        </header>
+        <main>
+            <!-- ACCOMMODATION -->
+            <section class="booking-section">
+                <h2>ACCOMMODATION</h2>
+                <form id="bookingForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nights">Количество ночей</label>
+                            <input type="number" id="nights" min="1" value="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="rooms">Количество номеров</label>
+                            <input type="number" id="rooms" min="1" value="1" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Выберите номер</label>
+                        <div class="search-select">
+                            <input type="text" id="productSearch" placeholder="Поиск номера..." autocomplete="off" />
+                            <div class="search-results" id="productResults"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" id="calculateBtn" class="primary-btn">Рассчитать стоимость</button>
+                    </div>
+                    <div class="total-sum">
+                        <span>Итого:</span>
+                        <span id="totalAmount">0</span>
+                        <span id="currency">руб.</span>
+                    </div>
+                </form>
+            </section>
+
+            <!-- DAYS -->
+            <section class="days-section">
+                <h2>DAYS</h2>
+                <div id="daysContainer"></div>
+                <button type="button" id="addDayBtn" class="secondary-btn">+ Добавить DAY</button>
+                <div class="total-sum total-days-sum">
+                    <span>Итого за DAYS:</span>
+                    <span id="totalDaysAmount">0</span>
+                    <span id="currencyDays">руб.</span>
+                </div>
+            </section>
+
+            <!-- OPTIONAL -->
+            <section class="optional-section">
+                <h2>OPTIONAL</h2>
+                <div class="day-card optional-card">
+                    <div class="day-header">OPTIONAL</div>
+                    <div class="form-group">
+                        <label>Выберите номер</label>
+                        <div class="search-select">
+                            <input type="text" id="optionalProductSearch" placeholder="Поиск номера..." autocomplete="off" />
+                            <div class="search-results" id="optionalProductResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADD PRODUCT -->
+            <section class="add-product-section">
+                <h2>Добавить новый номер</h2>
+                <form id="addProductForm">
+                    <div class="form-group">
+                        <label for="newProductName">Название номера</label>
+                        <input type="text" id="newProductName" placeholder="Люкс с видом на море" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newProductPrice">Цена за ночь</label>
+                            <input type="number" id="newProductPrice" min="0" step="0.01" placeholder="5000" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="newProductCurrency">Валюта</label>
+                            <select id="newProductCurrency">
+                                <option value="RUB">RUB</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="secondary-btn">Создать номер</button>
+                    </div>
+                </form>
+            </section>
+            <section class="total-summary">
+                <h2>ИТОГО ПО СМЕТЕ</h2>
+                <div class="total-sum final-sum">
+                    <span>Общая сумма:</span>
+                    <span id="finalTotalAmount">0</span>
+                    <span id="finalCurrency">руб.</span>
+                </div>
+            </section>
+        </main>
+        <div id="notification" class="notification"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
