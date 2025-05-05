@@ -133,20 +133,7 @@ async function loadAllProducts() {
 }
 
 // Альтернативный метод загрузки
-async function loadProductsAlternative() {
-    const url = `${BX_WEBHOOK}crm.product.list?select[0]=ID&select[1]=NAME&select[2]=PRICE&select[3]=CURRENCY_ID`;
-    
-    // Открываем в новом окне для ручного копирования данных
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <h1>Ручная загрузка данных</h1>
-        <p>Откройте эту ссылку в браузере:</p>
-        <a href="${url}" target="_blank">${url}</a>
-        <p>Скопируйте JSON и вставьте ниже:</p>
-        <textarea id="jsonData" style="width:100%; height:200px"></textarea>
-        <button onclick="window.opener.processProductData(document.getElementById('jsonData').value); window.close()">Отправить</button>
-    `);
-}
+
 
 // Функция для обработки данных из ручного ввода
 function processProductData(jsonString) {
